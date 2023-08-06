@@ -1,0 +1,1 @@
+{"ast":null,"code":"/*!\n * Copyright (c) Microsoft Corporation and contributors. All rights reserved.\n * Licensed under the MIT License.\n */\nexport const performance = globalThis.performance;\n//# sourceMappingURL=performanceBrowser.js.map","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}
