@@ -1,14 +1,9 @@
-import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core'
-import { SharedString } from '@fluidframework/sequence'
+import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core'
+import { SharedString } from 'fluid-framework'
 
 @Component({
   selector: 'app-collaborative-text-area',
   template: `
-    <h1>Collaborative Text Area</h1>
-    <!-- There are a lot of different ways content can be inserted into a textarea
-         and not all of them trigger a onBeforeInput event. To ensure we are grabbing
-         the correct selection before we modify the shared string we need to make sure
-         this.updateSelection is being called for multiple cases. -->
     <textarea #textArea
         rows="20"
         cols="50"
@@ -29,8 +24,6 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
   text: string
   selectionEnd = 0
   selectionStart = 0
-
-  constructor(private changeDetector: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     console.log(this.sharedString)
@@ -105,7 +98,7 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
       this.setCaretPosition(newCaretStart, newCaretEnd)
       // The event we're listening for here fires outside of Angular
       // so let it know to detect changes
-      this.changeDetector.detectChanges()
+      // this.changeDetector.detectChanges()
     })
   }
 
