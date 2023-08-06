@@ -1,0 +1,1 @@
+{"ast":null,"code":"import { SharedMap, SharedString } from 'fluid-framework';\nexport const schema = {\n  initialObjects: {\n    map1: SharedMap,\n    description: SharedString\n  },\n  dynamicObjectTypes: []\n};","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}

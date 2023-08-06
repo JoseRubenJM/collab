@@ -1,6 +1,8 @@
-import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core'
-import { SharedString } from 'fluid-framework'
-
+import { AzureClient, AzureContainerServices } from '@fluidframework/azure-client'
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core'
+import { IFluidContainer, SharedString } from 'fluid-framework'
+import { AzureFluidRelayService } from '../services/azure-fluid-relay.service'
+import { schema } from '../interfaces/fluid'
 @Component({
   selector: 'app-collaborative-text-area',
   template: `
@@ -17,24 +19,38 @@ import { SharedString } from 'fluid-framework'
         [value]="text"></textarea>
   `
 })
-export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
+export class CollaborativeTextAreaComponent implements OnInit {
+  @ViewChild('textArea') textArea!: ElementRef
+  text: string = ''
+  selectionEnd: number = 0
+  selectionStart: number = 0
 
-  @Input() sharedString: SharedString
-  @ViewChild('textArea') textArea: ElementRef
-  text: string
-  selectionEnd = 0
-  selectionStart = 0
+  client!: AzureClient
+  fluidContainer!: { container: IFluidContainer; services: AzureContainerServices }
+  sharedDescription!: SharedString
+  schema = schema
 
-  ngOnInit(): void {
-    console.log(this.sharedString)
-    this.text = this.sharedString.getText()
+  constructor(
+    public azureClient: AzureFluidRelayService
+  ){}
+
+  async ngOnInit(): Promise<void> {
+    this.client = this.azureClient.getClient()
+    // this.fluidContainer = await this.client.createContainer(this.schema)
+    // const id = await this.fluidContainer.container.attach()
+    // console.log(id)
+    this.fluidContainer = await this.client.getContainer('2164a0e1-fba8-4300-9bc0-b6cc4b143e3a', this.schema)
+    this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
+    this.text = this.sharedDescription.getText()
+
+    this.syncData()
   }
 
-  ngAfterViewInit(): void {
+  syncData(): void {
     // Sets an event listener so we can update our state as the value changes
-    this.sharedString.on('sequenceDelta', (event: any) => {
+    this.sharedDescription.on('sequenceDelta', (event: any) => {
       console.log(event)
-      const newText = this.sharedString.getText()
+      const newText = this.sharedDescription.getText()
       // We only need to insert if the text changed.
       if (newText === this.text) {
         return
@@ -135,13 +151,13 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
         const changeRangeLength = this.selectionEnd - this.selectionStart
         if (changeRangeLength === 0) {
             console.log(insertedText)
-            this.sharedString.insertText(this.selectionStart, insertedText)
+            this.sharedDescription.insertText(this.selectionStart, insertedText)
         } else {
-            this.sharedString.replaceText(this.selectionStart, this.selectionEnd, insertedText)
+            this.sharedDescription.replaceText(this.selectionStart, this.selectionEnd, insertedText)
         }
     } else {
         // Text was removed
-        this.sharedString.removeText(newPosition, newPosition + charactersModifiedCount)
+        this.sharedDescription.removeText(newPosition, newPosition + charactersModifiedCount)
     }
   }
 
