@@ -148,40 +148,7 @@ export class CollaborativeTextAreaComponent implements OnInit {
   }
 
   onTextChange(event: any): void {
-  // handleChange(event: any): void {
-    // We need to set the value here to keep the input responsive to the user
-    // const currentTarget = event.currentTarget
-    // const newText = currentTarget.value
-    const newText = event.textValue
-    console.log('newText ' + newText)
-
-    const charactersModifiedCount = this.description.length - newText.length
-    // this.description = newText
-    console.log('charactersModifiedCount ' + charactersModifiedCount)
-
-    // Get the new caret position and use that to get the text that was inserted
-    const newPosition = this.quillGetDeltaPosition(event.delta) ? this.quillGetDeltaPosition(event.delta) : 0
-    console.log('newPosition ' + newPosition)
-    // const newPosition = currentTarget.selectionStart ? currentTarget.selectionStart : 0
-    const isTextInserted = newPosition - this.selectionStart > 0
-    if (isTextInserted) {
-      // const insertedText = newText.substring(newPosition, newPosition)
-      const insertedText = this.quillGetDeltaInsert(event.delta)
-      const changeRangeLength = newPosition - newPosition
-        console.log('insertedText ' + insertedText)
-        console.log('changeRangeLength ' + changeRangeLength)
-        console.log(newPosition)
-        if (changeRangeLength === 0) {
-            this.sharedDescription.insertText(newPosition, insertedText)
-        } else {
-            this.sharedDescription.replaceText(newPosition, newPosition, insertedText)
-        }
-    } else {
-        // Text was removed
-        this.sharedDescription.removeText(newPosition, newPosition + charactersModifiedCount)
-    }
-
-    console.log(' ')
+    return
   }
 
   onInitEditor(event: any): void{

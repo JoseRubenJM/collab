@@ -1,1 +1,0 @@
-{"ast":null,"code":"/*!\n * Copyright (c) Microsoft Corporation and contributors. All rights reserved.\n * Licensed under the MIT License.\n */\nexport { DataObject } from \"./dataObject\";\nexport { PureDataObject } from \"./pureDataObject\";\n//# sourceMappingURL=index.js.map","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}
