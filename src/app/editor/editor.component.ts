@@ -1,7 +1,8 @@
 import { AzureClient, AzureContainerServices } from '@fluidframework/azure-client'
-import { Component, ElementRef, OnInit, ViewChild, ViewEncapsulation } from '@angular/core'
+import { Component, OnInit, ViewEncapsulation } from '@angular/core'
 import { IFluidContainer, SharedString } from 'fluid-framework'
 import { AzureFluidRelayService } from '../services/azure-fluid-relay.service'
+import { TinyliciousClient } from '@fluidframework/tinylicious-client'
 import { schema } from '../interfaces/fluid'
 
 @Component({
@@ -12,7 +13,6 @@ import { schema } from '../interfaces/fluid'
 })
 
 export class CollaborativeTextAreaComponent implements OnInit {
-  @ViewChild('textArea') textArea!: ElementRef
   description: string = ''
   selectionEnd: number = 0
   selectionStart: number = 0
@@ -29,14 +29,18 @@ export class CollaborativeTextAreaComponent implements OnInit {
   ){}
 
   async ngOnInit(): Promise<void> {
-    this.client = this.azureClient.getClient()
-    // this.fluidContainer = await this.client.createContainer(this.schema)
-    // const id = await this.fluidContainer.container.attach()
-    // console.log(id)
-    this.fluidContainer = await this.client.getContainer('c57a9986-a132-439a-8663-ad3066f25afe', this.schema)
-    this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
-    this.description = this.sharedDescription.getText()
+    // this.client = this.azureClient.getClient()
+    // // this.fluidContainer = await this.client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
+    // this.fluidContainer = await this.client.getContainer('228c2ef5-03cd-4abe-97de-8a9da5340611', this.schema)
+    //     // ac75e9c7-513a-4378-afa7-f8135dfbeb61
+    // this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
 
+    const client = new TinyliciousClient()
+    // this.fluidContainer = await client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
+    this.fluidContainer = await client.getContainer('63816fdf-f3e6-457c-bcd7-3b037d39474e', this.schema)
+    this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
+
+    this.description = this.sharedDescription.getText()
     this.syncData()
   }
 
@@ -126,10 +130,20 @@ export class CollaborativeTextAreaComponent implements OnInit {
   onSelectionChange(event: any): void {
     // console.log('onSelectionChange')
     console.log(event)
-    this.updateSelection()
+
+    if (this.editor.getSelection()){
+      // console.log('this.editor.getSelection ' + this.editor.getSelection().index)
+      this.selectionStart = event.range.index
+      this.selectionEnd = event.range.index + event.range.length
+      console.log(this.selectionStart)
+      console.log(this.selectionEnd)
+
+    }
   }
 
   updateSelection(): void {
+    console.log('updateSelection ')
+
     // if (!this.textArea) {
     //   return
     // }
@@ -138,22 +152,38 @@ export class CollaborativeTextAreaComponent implements OnInit {
     // this.selectionStart = textArea.selectionStart ? textArea.selectionStart : 0
     // this.selectionEnd = textArea.selectionEnd ? textArea.selectionEnd : 0
 
-    if (this.editor.getSelection()){
-      // console.log('this.editor.getSelection ' + this.editor.getSelection())
-      console.log(this.editor.getSelection())
-      this.selectionStart = this.editor.getSelection().index
-      this.selectionEnd = this.editor.getSelection().index
-    }
-
   }
 
   onTextChange(event: any): void {
-    return
+    if (this.quillGetDeltaDelete(event.delta) && this.quillGetDeltaInsert(event.delta)){
+      console.log('replace')
+      this.sharedDescription.replaceText(this.selectionStart, this.selectionEnd, this.quillGetDeltaInsert(event.delta))
+    } else if (this.quillGetDeltaDelete(event.delta) && !this.quillGetDeltaInsert(event.delta)){
+      console.log('remove')
+      this.sharedDescription.removeText(this.quillGetDeltaPosition(event.delta), this.quillGetDeltaPosition(event.delta) + this.quillGetDeltaDelete(event.delta))
+    } else {
+      console.log('insert')
+      console.log(this.quillGetDeltaPosition(event.delta))
+      console.log(this.quillGetDeltaInsert(event.delta))
+      // this.sharedDescription.insertText(this.quillGetDeltaPosition(event.delta), this.quillGetDeltaInsert(event.delta))
+      this.sharedDescription.insertText(0, 'a')
+    }
+    console.log('')
   }
 
   onInitEditor(event: any): void{
-    // console.log(event.editor.getSelection())
     this.editor = event.editor
+  }
+
+  quillGetDeltaPosition(delta: any): number {
+    const retain = delta.map((op: any) => {
+      if (typeof op.retain === 'number') {
+        return op.retain
+      } else {
+        return ''
+      }
+    }).join('')
+    return retain !== '' ? retain : 0
   }
 
   quillGetDeltaInsert(delta: any): string {
@@ -166,13 +196,14 @@ export class CollaborativeTextAreaComponent implements OnInit {
     }).join('')
   }
 
-  quillGetDeltaPosition(delta: any): number {
+  quillGetDeltaDelete(delta: any): number {
     return delta.map((op: any) => {
-      if (typeof op.retain === 'number') {
-        return op.retain
+      if (typeof op.delete === 'number') {
+        return op.delete
       } else {
         return ''
       }
     }).join('')
   }
+
 }
