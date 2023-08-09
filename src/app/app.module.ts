@@ -1,7 +1,9 @@
 import { AppComponent } from './app.component'
 import { AppRoutingModule } from './app-routing.module'
 import { BrowserModule } from '@angular/platform-browser'
-import { CollaborativeTextAreaComponent } from './collaborative-text-area/collaborative-text-area.component'
+import { CollaborativeTextAreaComponent } from './editor/editor.component'
+import { EditorModule } from 'primeng/editor'
+import { FormsModule } from '@angular/forms'
 import { NgModule } from '@angular/core'
 import { RouterModule } from '@angular/router'
 
@@ -13,7 +15,9 @@ import { RouterModule } from '@angular/router'
   imports: [
     AppRoutingModule,
     BrowserModule,
-    RouterModule
+    RouterModule,
+    EditorModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

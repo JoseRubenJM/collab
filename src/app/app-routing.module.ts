@@ -1,5 +1,5 @@
 import { RouterModule, Routes } from '@angular/router'
-import { CollaborativeTextAreaComponent } from './collaborative-text-area/collaborative-text-area.component'
+import { CollaborativeTextAreaComponent } from './editor/editor.component'
 import { NgModule } from '@angular/core'
 
 const routes: Routes = [
