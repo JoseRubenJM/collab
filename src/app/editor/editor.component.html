@@ -1,0 +1,28 @@
+<!-- <textarea #textArea
+rows="20"
+cols="50"
+class=""
+style=""
+(beforeinput)="updateSelection()"
+(keydown)="updateSelection()"
+(click)="updateSelection()"
+(contextmenu)="updateSelection()"
+(input)="handleChange($event)"
+[value]="text"></textarea> -->
+
+<p-editor 
+#editor 
+[style]="{ height: '320px' }" 
+(onInit)="onInitEditor($event)" 
+(onTextChange)="onTextChange($event)" 
+(onSelectionChange)="onSelectionChange($event)"
+[(ngModel)]="this.description"
+>
+  <ng-template pTemplate="header">
+      <span class="ql-formats">
+          <button type="button" class="ql-bold" aria-label="Bold"></button>
+          <button type="button" class="ql-italic" aria-label="Italic"></button>
+          <button type="button" class="ql-underline" aria-label="Underline"></button>
+      </span>
+  </ng-template>
+</p-editor>
