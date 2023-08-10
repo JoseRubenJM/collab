@@ -69,6 +69,11 @@ export class CollaborativeTextAreaComponent implements OnInit {
       console.log('event.last.position ' + event.last.position)
       console.log('event.last.segment.cachedLength ' + event.last.segment.cachedLength)
 
+      if (remoteCaretStart < this.selectionStart){
+        this.selectionStart = this.selectionStart + event.last.segment.cachedLength
+      }
+      setTimeout(() => this.editor.setSelection(this.selectionStart, 0), 0)
+
       this.description = this.sharedDescription.getText()
     })
   }
@@ -137,8 +142,8 @@ export class CollaborativeTextAreaComponent implements OnInit {
 
     this.selectionStart = this.quillGetDeltaPosition(event.delta)
     this.selectionEnd = +this.quillGetDeltaPosition(event.delta) + +this.quillGetDeltaInsert(event.delta).length
-    console.log('this.selectionStart ' + this.selectionStart)
-    console.log('this.selectionEnd ' + this.selectionEnd)
+    console.log('selectionStart ' + this.selectionStart)
+    console.log('selectionEnd ' + this.selectionEnd)
   }
 
   onInitEditor(event: any): void{
