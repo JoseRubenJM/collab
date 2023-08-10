@@ -37,7 +37,7 @@ export class CollaborativeTextAreaComponent implements OnInit {
 
     const client = new TinyliciousClient()
     // this.fluidContainer = await client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
-    this.fluidContainer = await client.getContainer('63816fdf-f3e6-457c-bcd7-3b037d39474e', this.schema)
+    this.fluidContainer = await client.getContainer('768416a8-a548-44d6-bf2d-1d02648d9149', this.schema)
     this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
 
     this.description = this.sharedDescription.getText()
@@ -128,23 +128,21 @@ export class CollaborativeTextAreaComponent implements OnInit {
   }
 
   onSelectionChange(event: any): void {
-    // console.log('onSelectionChange')
-    console.log(event)
-
-    if (this.editor.getSelection()){
+    console.log(this.editor.getSelection())
+    // if (this.editor.getSelection()){
       // console.log('this.editor.getSelection ' + this.editor.getSelection().index)
-      this.selectionStart = event.range.index
-      this.selectionEnd = event.range.index + event.range.length
-      console.log(this.selectionStart)
-      console.log(this.selectionEnd)
+    this.selectionStart = event.range.index
+    this.selectionEnd = event.range.index + event.range.length
+    // console.log('this.selectionStart ' + this.selectionStart)
+    // console.log('this.selectionEnd ' + this.selectionEnd)
 
-    }
+    // }
   }
 
   updateSelection(): void {
     console.log('updateSelection ')
 
-    // if (!this.textArea) {
+    // if (!this.editor) {
     //   return
     // }
 
@@ -152,22 +150,31 @@ export class CollaborativeTextAreaComponent implements OnInit {
     // this.selectionStart = textArea.selectionStart ? textArea.selectionStart : 0
     // this.selectionEnd = textArea.selectionEnd ? textArea.selectionEnd : 0
 
+    // console.log(this.editor)
+    // this.selectionStart = this.editor.getSelection().index ? this.editor.getSelection().index : 0
+    // this.selectionEnd = this.editor.getSelection().index ? this.editor.getSelection().index : 0
+
   }
 
   onTextChange(event: any): void {
+
+    console.log(event.delta)
     if (this.quillGetDeltaDelete(event.delta) && this.quillGetDeltaInsert(event.delta)){
       console.log('replace')
       this.sharedDescription.replaceText(this.selectionStart, this.selectionEnd, this.quillGetDeltaInsert(event.delta))
     } else if (this.quillGetDeltaDelete(event.delta) && !this.quillGetDeltaInsert(event.delta)){
       console.log('remove')
-      this.sharedDescription.removeText(this.quillGetDeltaPosition(event.delta), this.quillGetDeltaPosition(event.delta) + this.quillGetDeltaDelete(event.delta))
+      this.sharedDescription.removeText(this.quillGetDeltaPosition(event.delta), +this.quillGetDeltaPosition(event.delta) + +this.quillGetDeltaDelete(event.delta))
     } else {
       console.log('insert')
-      console.log(this.quillGetDeltaPosition(event.delta))
-      console.log(this.quillGetDeltaInsert(event.delta))
-      // this.sharedDescription.insertText(this.quillGetDeltaPosition(event.delta), this.quillGetDeltaInsert(event.delta))
-      this.sharedDescription.insertText(0, 'a')
+      if (this.quillGetDeltaInsert(event.delta).length > 1){
+        this.sharedDescription.insertText(this.selectionStart, this.quillGetDeltaInsert(event.delta))
+      } else {
+        this.sharedDescription.insertText(this.editor.getSelection().index - 1, this.quillGetDeltaInsert(event.delta))
+      }
     }
+
+    this.selectionStart = this.quillGetDeltaPosition(event.delta)
     console.log('')
   }
 
