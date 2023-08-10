@@ -31,13 +31,12 @@ export class CollaborativeTextAreaComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     // this.client = this.azureClient.getClient()
     // // this.fluidContainer = await this.client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
-    // this.fluidContainer = await this.client.getContainer('228c2ef5-03cd-4abe-97de-8a9da5340611', this.schema)
-    //     // ac75e9c7-513a-4378-afa7-f8135dfbeb61
+    // this.fluidContainer = await this.client.getContainer('ac75e9c7-513a-4378-afa7-f8135dfbeb61', this.schema)
     // this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
 
     const client = new TinyliciousClient()
     // this.fluidContainer = await client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
-    this.fluidContainer = await client.getContainer('768416a8-a548-44d6-bf2d-1d02648d9149', this.schema)
+    this.fluidContainer = await client.getContainer('5a697ee3-509c-4499-ac4d-9719823cf67e', this.schema)
     this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
 
     this.description = this.sharedDescription.getText()
@@ -47,16 +46,16 @@ export class CollaborativeTextAreaComponent implements OnInit {
   syncData(): void {
     // Sets an event listener so we can update our state as the value changes
     this.sharedDescription.on('sequenceDelta', (event: any) => {
-      // console.log(event)
-      const newText = this.sharedDescription.getText()
+      console.log('sequenceDelta')
+      console.log(event)
       // We only need to insert if the text changed.
-      if (newText === this.description) {
+      if (this.sharedDescription.getText() === this.description) {
         return
       }
 
       // If the event is our own then just insert the text
       if (event.isLocal) {
-        this.description = newText
+        this.description = this.sharedDescription.getText()
         return
       }
 
@@ -64,100 +63,62 @@ export class CollaborativeTextAreaComponent implements OnInit {
       // character insertion.
       const remoteCaretStart = event.first.position
       const remoteCaretEnd = event.last.position + event.last.segment.cachedLength
-      const charactersModifiedCount = newText.length - this.description.length
+      // const charactersModifiedCount = this.sharedDescription.getText().length - this.description.length
 
-      this.updateSelection()
-      const currentCaretStart = this.selectionStart
-      const currentCaretEnd = this.selectionEnd
+      console.log('event.first.position ' + event.first.position)
+      console.log('event.last.position ' + event.last.position)
+      console.log('event.last.segment.cachedLength ' + event.last.segment.cachedLength)
 
-      let newCaretStart = 0
-      let newCaretEnd = 0
-
-      // Remote text inserted/removed after our cp range
-      if (currentCaretEnd <= remoteCaretStart) {
-        // cp stays where it was before.
-        newCaretStart = currentCaretStart
-        newCaretEnd = currentCaretEnd
-      } else if (currentCaretStart > (remoteCaretEnd - 1)) {
-        // Remote text inserted/removed before our cp range
-        // We need to move our cp the number of characters inserted/removed
-        // to ensure we are in the same position
-        newCaretStart = currentCaretStart + charactersModifiedCount
-        newCaretEnd = currentCaretEnd + charactersModifiedCount
-      } else {
-        // Remote text is overlapping cp
-
-        // The remote changes occurred inside current selection
-        if (remoteCaretEnd <= currentCaretEnd && remoteCaretStart > currentCaretStart) {
-          // Our selection needs to include remote changes
-          newCaretStart = currentCaretStart
-          newCaretEnd = currentCaretEnd + charactersModifiedCount
-        } else if (remoteCaretEnd >= currentCaretEnd && remoteCaretStart <= currentCaretStart) {
-          // The remote changes encompass our location
-
-          // Our selection has been removed
-          // Move our cp to the beginning of the new text insertion
-          newCaretStart = remoteCaretStart
-          newCaretEnd = remoteCaretStart
-        } else {
-          // We have partial overlapping selection with the changes.
-          // This makes things a lot harder to manage so for now we will just remove the current selection
-          // and place it to the remote caret start.
-          newCaretStart = remoteCaretStart
-          newCaretEnd = remoteCaretStart
-        }
-      }
-
-      this.description = newText
-      this.setCaretPosition(newCaretStart, newCaretEnd)
-      // The event we're listening for here fires outside of Angular
-      // so let it know to detect changes
-      // this.changeDetector.detectChanges()
+      this.description = this.sharedDescription.getText()
     })
   }
 
   setCaretPosition(newStart: number, newEnd: number): void {
-    // if (this.textArea) {
-    //     const textArea = this.textArea.nativeElement
-    //     textArea.selectionStart = newStart
-    //     textArea.selectionEnd = newEnd
-    // }
-
-    console.log('setCaretPosition ' + newStart + ' ' + newEnd)
-    this.editor.setSelection(newStart, 0)
+    console.log('setCaretPosition')
+    console.log('newStart ' + newStart)
+    console.log('newEnd ' + newEnd)
+    // this.editor.setSelection(newStart, 0)
+    setTimeout(() => this.editor.setSelection(newStart, 0), 0)
   }
 
   onSelectionChange(event: any): void {
-    console.log(this.editor.getSelection())
-    // if (this.editor.getSelection()){
-      // console.log('this.editor.getSelection ' + this.editor.getSelection().index)
-    this.selectionStart = event.range.index
-    this.selectionEnd = event.range.index + event.range.length
-    // console.log('this.selectionStart ' + this.selectionStart)
-    // console.log('this.selectionEnd ' + this.selectionEnd)
+    console.log('onSelectionChange')
 
-    // }
+    if (event.source === 'api'){
+      console.log(event)
+    }
+
+    if (event.source === 'user'){
+      if (this.editor.getSelection()){
+        console.log(this.editor.getSelection())
+        // console.log('this.editor.getSelection ' + this.editor.getSelection().index)
+        this.selectionStart = event.range.index
+        this.selectionEnd = event.range.index + event.range.length
+        // console.log('this.selectionStart ' + this.selectionStart)
+        // console.log('this.selectionEnd ' + this.selectionEnd)
+
+      }
+    }
   }
 
-  updateSelection(): void {
-    console.log('updateSelection ')
+  // updateSelection(): void {
+  //   console.log('updateSelection ')
 
-    // if (!this.editor) {
-    //   return
-    // }
+  //   // if (!this.editor) {
+  //   //   return
+  //   // }
 
-    // const textArea = this.textArea.nativeElement
-    // this.selectionStart = textArea.selectionStart ? textArea.selectionStart : 0
-    // this.selectionEnd = textArea.selectionEnd ? textArea.selectionEnd : 0
+  //   // const textArea = this.textArea.nativeElement
+  //   // this.selectionStart = textArea.selectionStart ? textArea.selectionStart : 0
+  //   // this.selectionEnd = textArea.selectionEnd ? textArea.selectionEnd : 0
 
-    // console.log(this.editor)
-    // this.selectionStart = this.editor.getSelection().index ? this.editor.getSelection().index : 0
-    // this.selectionEnd = this.editor.getSelection().index ? this.editor.getSelection().index : 0
+  //   // console.log(this.editor)
+  //   // this.selectionStart = this.editor.getSelection().index ? this.editor.getSelection().index : 0
+  //   // this.selectionEnd = this.editor.getSelection().index ? this.editor.getSelection().index : 0
 
-  }
+  // }
 
   onTextChange(event: any): void {
-
     console.log(event.delta)
     if (this.quillGetDeltaDelete(event.delta) && this.quillGetDeltaInsert(event.delta)){
       console.log('replace')
@@ -175,7 +136,9 @@ export class CollaborativeTextAreaComponent implements OnInit {
     }
 
     this.selectionStart = this.quillGetDeltaPosition(event.delta)
-    console.log('')
+    this.selectionEnd = +this.quillGetDeltaPosition(event.delta) + +this.quillGetDeltaInsert(event.delta).length
+    console.log('this.selectionStart ' + this.selectionStart)
+    console.log('this.selectionEnd ' + this.selectionEnd)
   }
 
   onInitEditor(event: any): void{
