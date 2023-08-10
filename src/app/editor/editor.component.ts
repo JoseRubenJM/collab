@@ -38,6 +38,7 @@ export class CollaborativeTextAreaComponent implements OnInit {
     // this.fluidContainer = await client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
     this.fluidContainer = await client.getContainer('5a697ee3-509c-4499-ac4d-9719823cf67e', this.schema)
     this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
+    console.log(this.sharedDescription)
 
     this.description = this.sharedDescription.getText()
     this.syncData()
@@ -63,11 +64,6 @@ export class CollaborativeTextAreaComponent implements OnInit {
       // character insertion.
       const remoteCaretStart = event.first.position
       const remoteCaretEnd = event.last.position + event.last.segment.cachedLength
-      // const charactersModifiedCount = this.sharedDescription.getText().length - this.description.length
-
-      console.log('event.first.position ' + event.first.position)
-      console.log('event.last.position ' + event.last.position)
-      console.log('event.last.segment.cachedLength ' + event.last.segment.cachedLength)
 
       if (remoteCaretStart < this.selectionStart){
         this.selectionStart = this.selectionStart + event.last.segment.cachedLength
@@ -79,10 +75,6 @@ export class CollaborativeTextAreaComponent implements OnInit {
   }
 
   setCaretPosition(newStart: number, newEnd: number): void {
-    console.log('setCaretPosition')
-    console.log('newStart ' + newStart)
-    console.log('newEnd ' + newEnd)
-    // this.editor.setSelection(newStart, 0)
     setTimeout(() => this.editor.setSelection(newStart, 0), 0)
   }
 
@@ -96,12 +88,8 @@ export class CollaborativeTextAreaComponent implements OnInit {
     if (event.source === 'user'){
       if (this.editor.getSelection()){
         console.log(this.editor.getSelection())
-        // console.log('this.editor.getSelection ' + this.editor.getSelection().index)
         this.selectionStart = event.range.index
         this.selectionEnd = event.range.index + event.range.length
-        // console.log('this.selectionStart ' + this.selectionStart)
-        // console.log('this.selectionEnd ' + this.selectionEnd)
-
       }
     }
   }
@@ -142,8 +130,6 @@ export class CollaborativeTextAreaComponent implements OnInit {
 
     this.selectionStart = this.quillGetDeltaPosition(event.delta)
     this.selectionEnd = +this.quillGetDeltaPosition(event.delta) + +this.quillGetDeltaInsert(event.delta).length
-    console.log('selectionStart ' + this.selectionStart)
-    console.log('selectionEnd ' + this.selectionEnd)
   }
 
   onInitEditor(event: any): void{
