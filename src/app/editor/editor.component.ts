@@ -76,23 +76,24 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
   }
 
   setCaretPosition(first: any, last: any, op: any, sharedDescription: any): void {
-
-    // if (description.length === this.description.length)
-
+    // on insert before caret
     if (first.position < this.selectionStart){
-      console.log('selectionStart ' + this.selectionStart)
-      console.log('description.length ' + this.description.length)
-      console.log('sharedDescription.length ' + sharedDescription.length)
-      console.log(this.selectionStart - Math.abs(this.description.length - sharedDescription.length))
-
-      if (this.description.length > sharedDescription.length){
-        console.log('small')
-        this.selectionStart = this.selectionStart - Math.abs(this.description.length - sharedDescription.length)
-      } else {
-        console.log('bigger')
-        this.selectionStart = this.selectionStart + Math.abs(this.description.length - sharedDescription.length)
+      // on select range and insert
+      if (op.type === 0){
+        console.log('step1')
+        this.selectionStart = this.selectionStart + last.segment.cachedLength
+      } else if(op.type === 1) {
+        if (this.selectionStart > op.pos2){
+          console.log('step2')
+          this.selectionStart = this.selectionStart - (Math.abs(op.pos1 - op.pos2))
+        } else {
+          console.log('step3')
+          this.selectionStart = op.pos1
+        }
       }
-
+    // normal insert | after caret
+    } else {
+      // this.selectionStart = last.position
     }
 
     console.log('selectionStart ' + this.selectionStart)
@@ -115,11 +116,6 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
         console.log('selectionEnd ' + this.selectionEnd)
       }
     }
-
-    // console.log(this.editor.getContents(this.selectionStart, this.selectionEnd))
-    // console.log(this.editor.getFormat(this.selectionStart, this.selectionEnd))
-    // console.log(this.sharedDescription.getPropertiesAtPosition(this.selectionStart))
-
   }
 
   onTextChange(event: any): void {
@@ -134,17 +130,14 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
     } else {
       console.log('insert')
       // console.log(event.delta.ops)
-      // console.log('selectionStart ' + this.selectionStart)
+      console.log('selectionStart ' + this.selectionStart)
       // console.log('editor.getSelection().index ' + this.editor.getSelection().index)
       // console.log('quillGetDeltaPosition(event.delta) ' + this.quillGetDeltaPosition(event.delta))
       // if (event.delta.ops.length > 1){
       //   console.log(true)
       // }
-        console.log('quillGetDeltaPosition(event.delta) ' + this.getDeltaPosition(event.delta))
+        // console.log('quillGetDeltaPosition(event.delta) ' + this.getDeltaPosition(event.delta))
         this.sharedDescription.insertText(this.getDeltaPosition(event.delta), this.getDeltaInsert(event.delta))
-      // } else {
-        // this.sharedDescription.insertText(this.quillGetDeltaPosition(event.delta), this.quillGetDeltaInsert(event.delta))
-      // }
     }
 
     if (this.getDeltaAttributes(event.delta)){
@@ -155,8 +148,8 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
       // this.sharedDescription.annotateRange(this.getDeltaRange(event.delta)[0], +this.getDeltaRange(event.delta)[0] + +this.getDeltaRange(event.delta)[1], JSON.parse(this.getDeltaAttributes(event.delta)))
     }
 
-    this.selectionStart = this.getDeltaPosition(event.delta)
-    this.selectionEnd = +this.getDeltaPosition(event.delta) + +this.getDeltaInsert(event.delta).length
+    this.selectionStart = this.getDeltaPosition(event.delta) + this.getDeltaInsert(event.delta).length
+    this.selectionEnd = this.getDeltaPosition(event.delta) + this.getDeltaInsert(event.delta).length
     // console.log('selectionStart ' + this.selectionStart)
     // console.log('selectionEnd ' + this.selectionEnd)
     console.log('')
