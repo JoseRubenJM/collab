@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, ViewEncapsulation } from '@angular/core'
+import { AfterViewInit, Component, ViewChild, ViewEncapsulation } from '@angular/core'
 import { AzureClient, AzureContainerServices } from '@fluidframework/azure-client'
 import { IFluidContainer, SequenceDeltaEvent, SharedString } from 'fluid-framework'
 import { AzureFluidRelayService } from '../services/azure-fluid-relay.service'
@@ -13,7 +13,7 @@ import { schema } from '../interfaces/fluid'
   encapsulation: ViewEncapsulation.None,
 })
 
-export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
+export class CollaborativeTextAreaComponent implements AfterViewInit {
   description: string = ''
   selectionEnd: number = 0
   selectionStart: number = 0
@@ -31,10 +31,6 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
   ){
   }
 
-  async ngOnInit(): Promise<void> {
-    return
-  }
-
   async ngAfterViewInit(): Promise<void> {
     // this.client = this.azureClient.getClient()
     // // this.fluidContainer = await this.client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
@@ -47,7 +43,6 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
     this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
 
     this.description = this.sharedDescription.getText()
-
     this.syncData()
 
     // Editor initialization
@@ -67,12 +62,34 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
         return
       }
 
-      // Because we did not make the change we need to manage the remote character insertion.
+      // Update caret position
       this.setCaretPosition(event.first, event.last, event.opArgs.op)
 
+      // Update attributes
+      this.setAttributes(event.opArgs.op)
+
+      // Update the text
       this.description = this.sharedDescription.getText()
       // this.description = ''
     })
+  }
+
+  setAttributes(op: any): void {
+    console.log('setAttributes')
+    if (op.props){
+      console.log(op.props)
+
+      Object.entries(op.props).map(([k,v]) => {
+        console.log('op.pos1 ' + op.pos1)
+        console.log('op.pos2 ' + op.pos2)
+        console.log(`${k} ${v}`)
+        this.editor.formatText(op.pos1, Math.abs(op.pos1 - op.pos2), `${k}`, `${v}`)
+      })
+    }
+    setTimeout(() => this.editor.setSelection(this.selectionStart - 1, 0), 0)
+    setTimeout(() => this.editor.setSelection(this.selectionStart, 0), 0)
+    // this.editor.update()
+    // this.editor.focus()
   }
 
   setCaretPosition(first: any, last: any, op: any): void {
@@ -83,7 +100,7 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
         this.selectionStart = this.selectionStart + last.segment.cachedLength
       } else if(op.type === 1) {
         if (this.selectionStart > op.pos2){
-          this.selectionStart = this.selectionStart - (op.pos1 - op.pos2)
+          this.selectionStart = this.selectionStart - Math.abs(op.pos1 - op.pos2)
         } else {
           this.selectionStart = op.pos1
         }
@@ -110,6 +127,8 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
         console.log('selectionEnd ' + this.selectionEnd)
       }
     }
+
+    console.log(this.sharedDescription.getPropertiesAtPosition(this.selectionStart))
   }
 
   onTextChange(event: any): void {
@@ -128,10 +147,8 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
 
     if (this.getDeltaAttributes(event.delta)){
       console.log('attributes')
-      // console.log(JSON.parse(this.getDeltaAttributes(event.delta)))
-      // console.log('pos1 ' + event.delta.ops[0].retain)
-      // console.log('pos2 ' + (+event.delta.ops[0].retain + +event.delta.ops[1].retain))
-      // this.sharedDescription.annotateRange(this.getDeltaRange(event.delta)[0], +this.getDeltaRange(event.delta)[0] + +this.getDeltaRange(event.delta)[1], JSON.parse(this.getDeltaAttributes(event.delta)))
+      console.log(JSON.parse(this.getDeltaAttributes(event.delta)))
+      this.sharedDescription.annotateRange(this.getDeltaRange(event.delta)[0], +this.getDeltaRange(event.delta)[0] + +this.getDeltaRange(event.delta)[1], JSON.parse(this.getDeltaAttributes(event.delta)))
     }
 
     this.selectionStart = this.getDeltaPosition(event.delta) + this.getDeltaInsert(event.delta).length
