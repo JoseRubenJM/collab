@@ -68,32 +68,26 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
       }
 
       // Because we did not make the change we need to manage the remote character insertion.
-      this.setCaretPosition(event.first, event.last, event.opArgs.op, this.sharedDescription.getText() )
+      this.setCaretPosition(event.first, event.last, event.opArgs.op)
 
       this.description = this.sharedDescription.getText()
       // this.description = ''
     })
   }
 
-  setCaretPosition(first: any, last: any, op: any, sharedDescription: any): void {
-    // on insert before caret
+  setCaretPosition(first: any, last: any, op: any): void {
+    // insert before caret
     if (first.position < this.selectionStart){
       // on select range and insert
       if (op.type === 0){
-        console.log('step1')
         this.selectionStart = this.selectionStart + last.segment.cachedLength
       } else if(op.type === 1) {
         if (this.selectionStart > op.pos2){
-          console.log('step2')
-          this.selectionStart = this.selectionStart - (Math.abs(op.pos1 - op.pos2))
+          this.selectionStart = this.selectionStart - (op.pos1 - op.pos2)
         } else {
-          console.log('step3')
           this.selectionStart = op.pos1
         }
       }
-    // normal insert | after caret
-    } else {
-      // this.selectionStart = last.position
     }
 
     console.log('selectionStart ' + this.selectionStart)
@@ -105,7 +99,7 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
     console.log(event)
 
     if (event.source === 'api'){
-      console.log(event)
+      // console.log(event)
     }
 
     if (event.source === 'user'){
@@ -129,15 +123,7 @@ export class CollaborativeTextAreaComponent implements OnInit, AfterViewInit {
       this.sharedDescription.removeText(this.editor.getSelection().index, +this.editor.getSelection().index + +this.getDeltaDelete(event.delta))
     } else {
       console.log('insert')
-      // console.log(event.delta.ops)
-      console.log('selectionStart ' + this.selectionStart)
-      // console.log('editor.getSelection().index ' + this.editor.getSelection().index)
-      // console.log('quillGetDeltaPosition(event.delta) ' + this.quillGetDeltaPosition(event.delta))
-      // if (event.delta.ops.length > 1){
-      //   console.log(true)
-      // }
-        // console.log('quillGetDeltaPosition(event.delta) ' + this.getDeltaPosition(event.delta))
-        this.sharedDescription.insertText(this.getDeltaPosition(event.delta), this.getDeltaInsert(event.delta))
+      this.sharedDescription.insertText(this.getDeltaPosition(event.delta), this.getDeltaInsert(event.delta))
     }
 
     if (this.getDeltaAttributes(event.delta)){
