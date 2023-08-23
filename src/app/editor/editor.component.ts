@@ -169,19 +169,18 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
       console.log(event.delta)
 
       // console.log(this.getDeltaAttributes(event.delta))
-      let lastPosLine = 0
+      let lengthLine = 0
       this.getDeltaAttributes(event.delta).map((attributes: any, index: any) => {
         console.log(attributes)
         // console.log('index ' + index)
-        console.log(lastPosLine)
-        console.log(lastPosLine + this.getDeltaLine(event.delta)[index])
+        console.log(this.getDeltaLine(event.delta)[index] - this.editor.getLine(this.getDeltaLine(event.delta)[index])[1])
+        console.log(this.getDeltaLine(event.delta)[index] + lengthLine)
 
-        console.log(this.getDeltaLine(event.delta)[index])
-        console.log(this.editor.getLine(this.getDeltaLine(event.delta)[index])[1])
+        // console.log(this.editor.getLine(this.getDeltaLine(event.delta)[index])[1])
         Object.entries(attributes).map(([k,v]: any) => {
           if (`${k}` === 'list'){
             console.log('list')
-            this.sharedDescription.annotateRange(lastPosLine, lastPosLine + this.getDeltaLine(event.delta)[index], attributes)
+            this.sharedDescription.annotateRange(this.getDeltaLine(event.delta)[index] - this.editor.getLine(this.getDeltaLine(event.delta)[index])[1], this.getDeltaLine(event.delta)[index] + lengthLine, attributes)
             // this.sharedDescription.annotateRange(this.getDeltaLine(event.delta)[index] - 1, this.getDeltaLine(event.delta)[index] + this.getDeltaLine(event.delta)[this.getDeltaLine(event.delta).length < index ? index + 1 : index], attributes)
           } else {
             // if insert with attributes
@@ -199,7 +198,9 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
           }
         })
 
-        lastPosLine += this.getDeltaLine(event.delta)[index]
+        if (this.getDeltaLine(event.delta).length >= index + 1){
+          lengthLine += this.getDeltaLine(event.delta)[index + 1]
+        }
 
       })
     }
