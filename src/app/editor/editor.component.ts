@@ -39,7 +39,7 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
 
     const client = new TinyliciousClient()
     // this.fluidContainer = await client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
-    this.fluidContainer = await client.getContainer('6527b665-1f83-42a8-b0cb-246a887dc6fe', this.schema)
+    this.fluidContainer = await client.getContainer('8a915c45-3739-4680-b402-f8e732a071de', this.schema)
     this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
 
     // Editor initialization
@@ -72,6 +72,9 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
       // Update the text
       this.description = this.sharedDescription.getText()
       // this.description = ''
+
+      console.log('')
+      console.log('')
     })
   }
 
@@ -79,20 +82,16 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
     console.log('setAttributes')
     if (op){
       if (op.props) {
-        console.log(op.props)
-
         Object.entries(op.props).map(([k,v]) => {
-          console.log('op.pos1 ' + op.pos1)
-          console.log('op.pos2 ' + op.pos2)
           console.log(`${k} ${v}`)
           if (`${k}` === 'list'){
-            console.log('list')
             console.log(`${v}` === 'null' ? false : `${v}`)
-            // console.log('pos1 ' + op.pos1)
-            // console.log('pos2 ' + op.pos2)
-            // console.log(this.editor.getLine(op.pos1)[0])
-            console.log(this.editor.getIndex(this.editor.getLine(op.pos1)[0]))
-            this.editor.formatLine(this.editor.getIndex(this.editor.getLine(op.pos1)[0]), op.pos2, `${k}`, `${v}` === 'null' ? false : `${v}`)
+            console.log('pos1 ' + op.pos1)
+            console.log('pos2 ' + op.pos2)
+            // console.log()
+            // console.log(this.editor.getIndex(this.editor.getLine(op.pos1)[0]))
+            this.editor.formatLine(op.pos1, op.pos2 - op.pos1, `${k}`, `${v}` === 'null' ? false : `${v}`)
+            // this.editor.formatLine(this.editor.getIndex(this.editor.getLine(op.pos1)[0] - 1), op.pos2, `${k}`, `${v}` === 'null' ? false : `${v}`)
           } else {
             this.editor.formatText(op.pos1, Math.abs(op.pos1 - op.pos2), `${k}`, `${v}` === 'null' ? false : `${v}`)
           }
@@ -170,13 +169,20 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
       console.log(event.delta)
 
       // console.log(this.getDeltaAttributes(event.delta))
+      let lastPosLine = 0
       this.getDeltaAttributes(event.delta).map((attributes: any, index: any) => {
         console.log(attributes)
+        // console.log('index ' + index)
+        console.log(lastPosLine)
+        console.log(lastPosLine + this.getDeltaLine(event.delta)[index])
+
+        console.log(this.getDeltaLine(event.delta)[index])
+        console.log(this.editor.getLine(this.getDeltaLine(event.delta)[index])[1])
         Object.entries(attributes).map(([k,v]: any) => {
           if (`${k}` === 'list'){
             console.log('list')
-            console.log(this.getDeltaRange(event.delta).length < index ? index + 1 : index)
-            this.sharedDescription.annotateRange(this.getDeltaRange(event.delta)[index] - 1, this.getDeltaRange(event.delta)[index] + this.getDeltaRange(event.delta)[this.getDeltaRange(event.delta).length < index ? index + 1 : index], attributes)
+            this.sharedDescription.annotateRange(lastPosLine, lastPosLine + this.getDeltaLine(event.delta)[index], attributes)
+            // this.sharedDescription.annotateRange(this.getDeltaLine(event.delta)[index] - 1, this.getDeltaLine(event.delta)[index] + this.getDeltaLine(event.delta)[this.getDeltaLine(event.delta).length < index ? index + 1 : index], attributes)
           } else {
             // if insert with attributes
             if (this.getDeltaInsert(event.delta)){
@@ -192,6 +198,9 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
             }
           }
         })
+
+        lastPosLine += this.getDeltaLine(event.delta)[index]
+
       })
     }
 
@@ -199,8 +208,6 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
     this.selectionEnd = this.getDeltaPosition(event.delta) + this.getDeltaInsert(event.delta).length
     // console.log('selectionStart ' + this.selectionStart)
     // console.log('selectionEnd ' + this.selectionEnd)
-    console.log('')
-    console.log('')
   }
 
   getDeltaPosition(delta: any): number {
@@ -222,6 +229,20 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
         // if (op.attributes === undefined){
           retain.push(op.retain)
         // }
+      }
+    })
+    return retain
+  }
+
+  getDeltaLine(delta: any): number[] {
+    const retain: any[] = []
+    delta.map((op: any) => {
+      if (op.retain === '' || op.retain === undefined ){
+        retain.push(0)
+      } else {
+        if (op.attributes === undefined){
+          retain.push(op.retain)
+        }
       }
     })
     return retain
