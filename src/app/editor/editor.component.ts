@@ -166,24 +166,45 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
 
     if (this.getDeltaAttributes(event.delta)){
       console.log('attributes')
-      // console.log(event.delta)
+      console.log(event.delta)
 
       // console.log(this.getDeltaAttributes(event.delta))
       let firstPosLine = 0
+      let pos1 = 0
+      let pos2 = 0
       this.getDeltaAttributes(event.delta).map((attributes: any, index: any) => {
         // console.log(attributes)
-        console.log(this.getDeltaLine(event.delta))
-        // console.log(this.editor.getLine(this.getDeltaLine(event.delta)[index] + this.getDeltaLine(event.delta)[index - 1]))
-        console.log('index ' + index)
-        console.log(this.getDeltaLine(event.delta)[index] - this.editor.getLine(this.getDeltaLine(event.delta)[index])[1])
-        console.log(firstPosLine + this.getDeltaLine(event.delta)[index])
 
-        // console.log(this.getDeltaLine(event.delta)[index])
-        console.log(this.editor.getLine(this.getDeltaLine(event.delta)[index]))
+        console.log('index ' + index)
+        console.log('firstPosLine ' + firstPosLine)
+        console.log(firstPosLine + this.getDeltaLine(event.delta)[index])
+        // console.log('getLine offset ' + this.editor.getLine(firstPosLine)[0].cache.length - 1)
+        // console.log(this.editor.getLine(this.getDeltaLine(event.delta)[index]))
+
+        pos1 = firstPosLine
+        pos2 = firstPosLine + this.getDeltaLine(event.delta)[index]
+
+        if (firstPosLine !== 0){
+          pos1 = pos2 - (this.editor.getLine(firstPosLine)[0].cache.length - 1)
+        } else {
+          pos1 = pos2 - (this.editor.getLine(this.getDeltaLine(event.delta)[index])[0].cache.length - 1)
+        }
+
+        console.log('pos1 ' + pos1)
+        console.log('pos2 ' + pos2)
+
+        firstPosLine += this.getDeltaLine(event.delta)[index] + 1
+
+        console.log('')
+
+        // console.log(this.getDeltaLine(event.delta))
+        // console.log(this.editor.getLine(this.getDeltaLine(event.delta)[index]))
+        // console.log(lastPosLine + this.getDeltaLine(event.delta)[index])
+
         Object.entries(attributes).map(([k,v]: any) => {
           if (`${k}` === 'list'){
             console.log('list')
-            this.sharedDescription.annotateRange(this.getDeltaLine(event.delta)[index] - this.editor.getLine(this.getDeltaLine(event.delta)[index])[1], firstPosLine + this.getDeltaLine(event.delta)[index], attributes)
+            this.sharedDescription.annotateRange(pos1, pos2, attributes)
             // this.sharedDescription.annotateRange(this.getDeltaLine(event.delta)[index] - 1, this.getDeltaLine(event.delta)[index] + this.getDeltaLine(event.delta)[this.getDeltaLine(event.delta).length < index ? index + 1 : index], attributes)
           } else {
             // if insert with attributes
@@ -201,9 +222,7 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
           }
         })
 
-        // if (this.getDeltaLine(event.delta).length >= index + 1){
-          firstPosLine += this.editor.getLine(this.getDeltaLine(event.delta)[index])[1] + 1
-        // }
+        // lastPosLine += this.editor.getLine(this.getDeltaLine(event.delta)[index])[1] + 1
 
       })
     }
