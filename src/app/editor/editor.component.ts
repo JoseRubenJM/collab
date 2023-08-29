@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, ViewChild, ViewEncapsulation } from '@angular/core'
 import { AzureClient, AzureContainerServices, AzureMember } from '@fluidframework/azure-client'
 import { ICursor, schema } from '../interfaces/fluid'
-import { IFluidContainer, IServiceAudience, SequenceDeltaEvent, SharedMap, SharedString } from 'fluid-framework'
+import { IFluidContainer, IServiceAudience, SharedMap } from 'fluid-framework'
 import { AzureFluidRelayService } from '../services/azure-fluid-relay.service'
 import { Editor } from 'primeng/editor'
 import { TinyliciousClient } from '@fluidframework/tinylicious-client'
@@ -60,7 +60,7 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
 
   syncData(): void {
     this.sharedDescription.on('valueChanged', () => {
-      console.log('valueChanged')
+      console.log('sharedDescriptionChanged')
 
       // If the event is our own then just insert the text
       console.log(this.sharedDescription.get('delta'))
@@ -72,6 +72,7 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
     })
 
     this.sharedCursor.on('valueChanged', () => {
+      console.log('sharedCursorChanged')
       if (this.userId !== this.sharedCursor.get('cursor').userId){
         this.cursor = this.sharedCursor.get('cursor')
       }
@@ -85,7 +86,6 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
 
   onTextChange(event: any): void {
     console.log('onTextChange')
-    console.log(event)
 
     this.sharedDescription.set('delta', {
       userId: this.userId,
