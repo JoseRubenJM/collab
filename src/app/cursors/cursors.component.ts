@@ -29,16 +29,7 @@ export class CursorsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.color = this.colors[55555 % this.colors.length]
-    // console.log(this.color)
-    // console.log(this.cursor.x)
+    this.color = this.colors[parseInt(this.cursor.userId) % this.colors.length]
   }
 
-  // getCursorStyle(): any {
-  //   return {
-  //     border: '1px solid #dcdcdc',
-  //     transform: 'translate(' + this.cursorX + ',' + this.cursorY + ')'
-  //   }
-  // }
 }
-// transform: 'translate(' + this.cursorX + ',' + this.cursorY + ')'

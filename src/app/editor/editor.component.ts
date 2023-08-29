@@ -62,13 +62,12 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
     this.sharedDescription.on('valueChanged', () => {
       console.log('sharedDescriptionChanged')
 
-      // If the event is our own then just insert the text
-      console.log(this.sharedDescription.get('delta'))
       if (this.userId !== this.sharedDescription.get('delta').userId){
         this.editor.updateContents(this.sharedDescription.get('delta').delta)
       }
 
-      console.log('')
+      console.log(this.editor.history)
+
     })
 
     this.sharedCursor.on('valueChanged', () => {
@@ -92,10 +91,10 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
       delta: event.delta
     })
 
-    console.log('')
   }
 
   handleMouseMove(event: any): void {
+    console.log(event)
     this.sharedCursor.set('cursor', {
       userId: this.userId,
       x: Math.round(event.clientX),
