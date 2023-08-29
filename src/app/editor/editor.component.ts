@@ -21,7 +21,7 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
   selectionEnd: number = 0
   selectionStart: number = 0
 
-  cursor!: ICursor
+  cursor?: ICursor
   cursors: ICursor[] = []
   userId?: string
 
@@ -40,15 +40,15 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
   async ngAfterViewInit(): Promise<void> {
     // this.client = this.azureClient.getClient()
     // this.fluidContainer = await this.client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
-    // this.fluidContainer = await this.client.getContainer('ac75e9c7-513a-4378-afa7-f8135dfbeb61', this.schema)
+    // this.fluidContainer = await this.client.getContainer('639cb7a0-ba19-42d8-9947-f2f22f779ce0', this.schema)
 
     const client = new TinyliciousClient()
     // this.fluidContainer = await client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
-    this.fluidContainer = await client.getContainer('b78580d1-24ac-4211-8ac0-0d24bad31f44', this.schema)
+    this.fluidContainer = await client.getContainer('f3673e9a-cfbb-4a31-9856-877f81ebd525', this.schema)
 
     this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
     this.sharedCursor = this.fluidContainer.container.initialObjects.cursor as SharedMap
-    this.userId = this.fluidContainer.services.audience.getMyself()?.userId
+    this.audience = this.fluidContainer.services.audience
 
     // Editor initialization
     this.editor = this.editorEl.quill
@@ -88,25 +88,29 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
       console.log('')
     })
 
-    this.sharedCursor.on('valueChanged', (event: any) => {
-      console.log('valueChanged')
-      console.log(event)
-      console.log(this.sharedCursor.get('x') || 0)
-      console.log(this.sharedCursor.get('y') || 0)
+    this.sharedCursor.on('valueChanged', () => {
+      // console.log('valueChanged')
 
-      if (this.userId !== this.sharedCursor.get('userId')){
-        this.cursor = {
-          userId: this.sharedCursor.get('userId') || '',
-          x: this.sharedCursor.get('x') || 0,
-          y: this.sharedCursor.get('y') || 0
-        }
+      if (this.userId !== this.sharedCursor.get('cursor').userId){
+        this.cursor = this.sharedCursor.get('cursor')
       }
+
+    })
+
+    this.audience.on('membersChanged', () => {
+      // console.log('changed')
+      this.userId = this.audience.getMyself()?.userId
     })
 
   }
+
   handleMouseMove(event: any): void {
-    this.sharedCursor.set('x', Math.round(event.clientX))
-    this.sharedCursor.set('y', Math.round(event.clientY))
+    this.sharedCursor.set('cursor', {
+      userId: this.userId,
+      x: Math.round(event.clientX),
+      y: Math.round(event.clientY)
+    })
+
   }
 
   handleMouseLeave(): void {

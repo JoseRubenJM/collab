@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core'
+import { Component, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core'
 import { ICursor } from '../interfaces/fluid'
 
 @Component({
@@ -30,8 +30,8 @@ export class CursorsComponent implements OnInit {
 
   ngOnInit(): void {
     this.color = this.colors[55555 % this.colors.length]
-    console.log(this.color)
-
+    // console.log(this.color)
+    // console.log(this.cursor.x)
   }
 
   // getCursorStyle(): any {

@@ -8,7 +8,6 @@ export const schema = {
   dynamicObjectTypes: [
   ]
 }
-
 export interface ICursor {
   userId: string
   x: number
