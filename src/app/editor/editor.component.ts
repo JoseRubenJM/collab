@@ -95,8 +95,8 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
     console.log(event)
     this.sharedCursor.set('cursor', {
       userId: this.userId,
-      x: Math.round(event.clientX),
-      y: Math.round(event.clientY)
+      x: Math.round(event.pageX),
+      y: Math.round(event.pageY)
     })
   }
 
