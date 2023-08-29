@@ -60,8 +60,8 @@
           <button title="Superíndice" class="ql-script" value="super" aria-label="script"></button>
         </span>
         <span class="ql-formats">
-          <button title="Deshacer" class="ql-undo" aria-label="undo"></button>
-          <button title="Rehacer" class="ql-redo" aria-label="redo"></button>
+          <button title="Deshacer" (click)="onClickUndo()"><i class="pi pi-replay" style="font-size: .85rem"></i></button>
+          <button title="Rehacer" (click)="onClickRedo()"><i class="pi pi-refresh" style="font-size: .85rem"></i></button>
         </span>
       </p-header>
     </ng-template>

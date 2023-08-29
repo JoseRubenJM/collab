@@ -66,8 +66,6 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
         this.editor.updateContents(this.sharedDescription.get('delta').delta)
       }
 
-      console.log(this.editor.history)
-
     })
 
     this.sharedCursor.on('valueChanged', () => {
@@ -100,6 +98,14 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
       x: Math.round(event.clientX),
       y: Math.round(event.clientY)
     })
+  }
+
+  onClickUndo(): void {
+    this.editor.history.undo()
+  }
+
+  onClickRedo(): void {
+    this.editor.history.redo()
   }
 
 }
