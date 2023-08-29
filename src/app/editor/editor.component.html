@@ -1,19 +1,31 @@
-<p-editor 
-#editor 
-[style]="{ height: '620px' }" 
-(onTextChange)="onTextChange($event)" 
-(onSelectionChange)="onSelectionChange($event)"
-[(ngModel)]="description"
->
-  <ng-template pTemplate="header">
-      <span class="ql-formats">
-          <button type="button" class="ql-bold" aria-label="Bold"></button>
-          <button type="button" class="ql-italic" aria-label="Italic"></button>
-          <button type="button" class="ql-underline" aria-label="Underline"></button>
-      </span>
-      <span class="ql-formats">
-        <button title="List" class="ql-list" value="ordered" aria-label="list"></button>
-        <button title="List" class="ql-list" value="bullet" aria-label="list"></button>
-      </span>
-  </ng-template>
-</p-editor>
+<div style="position: relative; height: 65vh;">
+  <p-editor 
+  #editor 
+  [style]="{ height: '360px' }" 
+  (onTextChange)="onTextChange($event)" 
+  (onSelectionChange)="onSelectionChange($event)"
+  [(ngModel)]="description"
+  >
+    <ng-template pTemplate="header">
+        <span class="ql-formats">
+            <button type="button" class="ql-bold" aria-label="Bold"></button>
+            <button type="button" class="ql-italic" aria-label="Italic"></button>
+            <button type="button" class="ql-underline" aria-label="Underline"></button>
+        </span>
+        <span class="ql-formats">
+          <button title="List" class="ql-list" value="ordered" aria-label="list"></button>
+          <button title="List" class="ql-list" value="bullet" aria-label="list"></button>
+        </span>
+    </ng-template>
+  </p-editor>
+  <!-- <div #text id="text">
+    Mueve el cursor para transmitir tu posición a otras personas en la sala.
+  </div> -->
+  <div #cursorsContainer id="cursors-container" (mousemove)="handleMouseMove($event)" (mouseleave)="handleMouseLeave()"></div>
+  <div *ngIf="this.cursor">
+    <!-- <div *ngFor="let cursor of this.cursors"> -->
+      <app-cursors
+      [cursor]="cursor"
+    ></app-cursors>
+    <!-- </div> -->
+  </div>

@@ -1,10 +1,10 @@
 import { AfterViewInit, Component, ViewChild, ViewEncapsulation } from '@angular/core'
-import { AzureClient, AzureContainerServices } from '@fluidframework/azure-client'
-import { IFluidContainer, SequenceDeltaEvent, SharedString } from 'fluid-framework'
+import { AzureClient, AzureContainerServices, AzureMember } from '@fluidframework/azure-client'
+import { ICursor, schema } from '../interfaces/fluid'
+import { IFluidContainer, IServiceAudience, SequenceDeltaEvent, SharedMap, SharedString } from 'fluid-framework'
 import { AzureFluidRelayService } from '../services/azure-fluid-relay.service'
 import { Editor } from 'primeng/editor'
 import { TinyliciousClient } from '@fluidframework/tinylicious-client'
-import { schema } from '../interfaces/fluid'
 
 @Component({
   selector: 'app-collaborative-text-area',
@@ -14,42 +14,52 @@ import { schema } from '../interfaces/fluid'
 })
 
 export class CollaborativeTextAreaComponent implements AfterViewInit {
+  @ViewChild('editor') editorEl!: Editor
+
+  editor!: any
   description: string = ''
   selectionEnd: number = 0
   selectionStart: number = 0
 
+  cursor!: ICursor
+  cursors: ICursor[] = []
+  userId?: string
+
   client!: AzureClient
   fluidContainer!: { container: IFluidContainer; services: AzureContainerServices }
   sharedDescription!: SharedString
+  sharedCursor!: SharedMap
   schema = schema
-
-  editor!: any
-  @ViewChild('editor') editorEl!: Editor
+  audience!: IServiceAudience<AzureMember<any>>
 
   constructor(
-    public azureClient: AzureFluidRelayService
-  ){
-  }
+    public azureClient: AzureFluidRelayService,
+    // public readonly globalStorage: GlobalStorageService,
+  ){}
 
   async ngAfterViewInit(): Promise<void> {
     // this.client = this.azureClient.getClient()
-    // // this.fluidContainer = await this.client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
+    // this.fluidContainer = await this.client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
     // this.fluidContainer = await this.client.getContainer('ac75e9c7-513a-4378-afa7-f8135dfbeb61', this.schema)
-    // this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
 
     const client = new TinyliciousClient()
     // this.fluidContainer = await client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
-    this.fluidContainer = await client.getContainer('8a915c45-3739-4680-b402-f8e732a071de', this.schema)
+    this.fluidContainer = await client.getContainer('b78580d1-24ac-4211-8ac0-0d24bad31f44', this.schema)
+
     this.sharedDescription = this.fluidContainer.container.initialObjects.description as SharedString
+    this.sharedCursor = this.fluidContainer.container.initialObjects.cursor as SharedMap
+    this.userId = this.fluidContainer.services.audience.getMyself()?.userId
 
     // Editor initialization
     this.editor = this.editorEl.quill
     this.editor.container.style.whiteSpace = 'pre-line'
-    this.setAttributes(null, this.sharedDescription)
+    // this.setAttributes(null, this.sharedDescription)
 
     this.description = this.sharedDescription.getText()
+
     this.syncData()
 
+    this.setAttributes(null, this.sharedDescription)
   }
 
   syncData(): void {
@@ -66,16 +76,41 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
       // Update caret position
       this.setCaretPosition(event.first, event.last, event.opArgs.op)
 
-      // Update attributes
-      this.setAttributes(event.opArgs.op, null)
-
       // Update the text
       this.description = this.sharedDescription.getText()
+
+      // Update attributes
+      this.setAttributes(event.opArgs.op, null)
+      this.setAttributes(null, this.sharedDescription)
+
       // this.description = ''
 
       console.log('')
-      console.log('')
     })
+
+    this.sharedCursor.on('valueChanged', (event: any) => {
+      console.log('valueChanged')
+      console.log(event)
+      console.log(this.sharedCursor.get('x') || 0)
+      console.log(this.sharedCursor.get('y') || 0)
+
+      if (this.userId !== this.sharedCursor.get('userId')){
+        this.cursor = {
+          userId: this.sharedCursor.get('userId') || '',
+          x: this.sharedCursor.get('x') || 0,
+          y: this.sharedCursor.get('y') || 0
+        }
+      }
+    })
+
+  }
+  handleMouseMove(event: any): void {
+    this.sharedCursor.set('x', Math.round(event.clientX))
+    this.sharedCursor.set('y', Math.round(event.clientY))
+  }
+
+  handleMouseLeave(): void {
+    //
   }
 
   setAttributes(op?: any, sharedDescription?: any): void {
@@ -85,30 +120,38 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
         Object.entries(op.props).map(([k,v]) => {
           console.log(`${k} ${v}`)
           if (`${k}` === 'list'){
-            console.log(`${v}` === 'null' ? false : `${v}`)
-            console.log('pos1 ' + op.pos1)
-            console.log('pos2 ' + op.pos2)
+            console.log('format line')
+            // console.log(`${v}` === 'null' ? false : `${v}`)
+            // console.log('pos1 ' + op.pos1)
+            // console.log('pos2 ' + op.pos2)
             // console.log()
             // console.log(this.editor.getIndex(this.editor.getLine(op.pos1)[0]))
             this.editor.formatLine(op.pos1, op.pos2 - op.pos1, `${k}`, `${v}` === 'null' ? false : `${v}`)
             // this.editor.formatLine(this.editor.getIndex(this.editor.getLine(op.pos1)[0] - 1), op.pos2, `${k}`, `${v}` === 'null' ? false : `${v}`)
           } else {
+            console.log('format text')
             this.editor.formatText(op.pos1, Math.abs(op.pos1 - op.pos2), `${k}`, `${v}` === 'null' ? false : `${v}`)
           }
         })
       }
     } else if (sharedDescription){
-      for (let i = 0; i < sharedDescription.getText().length; i++) {
-        if (sharedDescription.getPropertiesAtPosition(i)){
-          Object.entries(sharedDescription.getPropertiesAtPosition(i)).map(([k,v]) => {
-            // console.log(sharedDescription.getPropertiesAtPosition(i))
-            // console.log(`${k} ${v}`)
-            // console.log('index ' + i)
+      console.log('sharedDescription')
 
-              setTimeout(() => this.editor.formatText(i, 1, `${k}`, `${v}`), 0)
+      Object.entries(sharedDescription.getText()).map((index) => {
+
+        if (sharedDescription.getPropertiesAtPosition(parseInt(index[0]))){
+          Object.entries(sharedDescription.getPropertiesAtPosition(parseInt(index[0]))).map(([k,v]) => {
+            // console.log(sharedDescription.getPropertiesAtPosition(i))
+            console.log(`${k} ${v}`)
+            // console.log('index ' + i)
+            console.log(parseInt(index[0]))
+            setTimeout(() =>
+            // ToDo: format by ranges not by index
+            this.editor.formatText(parseInt(index[0]), 1, `${k}`, `${v}`)
+            , 0)
           })
         }
-      }
+      })
     }
 
     this.editor.blur()
@@ -168,45 +211,46 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
       console.log('attributes')
       console.log(event.delta)
 
-      // console.log(this.getDeltaAttributes(event.delta))
       let firstPosLine = 0
       let pos1 = 0
       let pos2 = 0
+      let attribute = ''
       this.getDeltaAttributes(event.delta).map((attributes: any, index: any) => {
-        // console.log(attributes)
-
-        console.log('index ' + index)
-        console.log('firstPosLine ' + firstPosLine)
-        console.log(firstPosLine + this.getDeltaLine(event.delta)[index])
-        // console.log('getLine offset ' + this.editor.getLine(firstPosLine)[0].cache.length - 1)
-        // console.log(this.editor.getLine(this.getDeltaLine(event.delta)[index]))
-
-        pos1 = firstPosLine
-        pos2 = firstPosLine + this.getDeltaLine(event.delta)[index]
-
-        if (firstPosLine !== 0){
-          pos1 = pos2 - (this.editor.getLine(firstPosLine)[0].cache.length - 1)
-        } else {
-          pos1 = pos2 - (this.editor.getLine(this.getDeltaLine(event.delta)[index])[0].cache.length - 1)
-        }
-
-        console.log('pos1 ' + pos1)
-        console.log('pos2 ' + pos2)
-
-        firstPosLine += this.getDeltaLine(event.delta)[index] + 1
-
-        console.log('')
-
-        // console.log(this.getDeltaLine(event.delta))
-        // console.log(this.editor.getLine(this.getDeltaLine(event.delta)[index]))
-        // console.log(lastPosLine + this.getDeltaLine(event.delta)[index])
+        console.log(attributes)
 
         Object.entries(attributes).map(([k,v]: any) => {
           if (`${k}` === 'list'){
-            console.log('list')
+            attribute = 'list'
+
+          }
+        })
+
+        switch(attribute){
+          case 'list':{
+            // console.log('list')
+            // console.log('index ' + index)
+            // console.log('firstPosLine ' + firstPosLine)
+            // console.log(firstPosLine + this.getDeltaLine(event.delta)[index])
+
+            pos1 = firstPosLine
+            pos2 = firstPosLine + this.getDeltaLine(event.delta)[index]
+
+            if (firstPosLine !== 0){
+              pos1 = pos2 - (this.editor.getLine(firstPosLine)[0].cache.length - 1)
+            } else {
+              pos1 = pos2 - (this.editor.getLine(this.getDeltaLine(event.delta)[index])[0].cache.length - 1)
+            }
+
+            // console.log('pos1 ' + pos1)
+            // console.log('pos2 ' + pos2)
+
+            firstPosLine += this.getDeltaLine(event.delta)[index] + 1
+
             this.sharedDescription.annotateRange(pos1, pos2, attributes)
-            // this.sharedDescription.annotateRange(this.getDeltaLine(event.delta)[index] - 1, this.getDeltaLine(event.delta)[index] + this.getDeltaLine(event.delta)[this.getDeltaLine(event.delta).length < index ? index + 1 : index], attributes)
-          } else {
+
+            break
+          }
+          default: {
             // if insert with attributes
             if (this.getDeltaInsert(event.delta)){
               console.log('insert & format')
@@ -214,23 +258,19 @@ export class CollaborativeTextAreaComponent implements AfterViewInit {
             // set attributes to the text already writen
             } else {
               console.log('format')
-              console.log(this.getDeltaPosition(event.delta))
-              console.log(this.getDeltaRange(event.delta)[0])
-              console.log(attributes)
-              this.sharedDescription.annotateRange(this.getDeltaRange(event.delta)[0], this.getDeltaRange(event.delta)[0] + this.getDeltaRange(event.delta)[1], attributes)
+              this.sharedDescription.annotateRange(this.selectionStart, this.selectionEnd, attributes)
             }
+            break
           }
-        })
-
-        // lastPosLine += this.editor.getLine(this.getDeltaLine(event.delta)[index])[1] + 1
-
+        }
       })
     }
 
-    this.selectionStart = this.getDeltaPosition(event.delta) + this.getDeltaInsert(event.delta).length
-    this.selectionEnd = this.getDeltaPosition(event.delta) + this.getDeltaInsert(event.delta).length
+    // this.selectionStart = this.getDeltaPosition(event.delta) + this.getDeltaInsert(event.delta).length
+    // this.selectionEnd = this.getDeltaPosition(event.delta) + this.getDeltaInsert(event.delta).length
     // console.log('selectionStart ' + this.selectionStart)
     // console.log('selectionEnd ' + this.selectionEnd)
+    console.log('')
   }
 
   getDeltaPosition(delta: any): number {
