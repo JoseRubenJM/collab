@@ -1,16 +1,17 @@
-<svg
+<div  
+class="cursor"
+[ngStyle]="{'transform': 'translate(' + cursor.x + 'px,' + cursor.y + 'px)'}">
+  <svg
   #cursorIcon
-  class="cursor"
   fill="none"
-  width="24"
-  height="36"
-  [ngStyle]="{'transform': 'translate(' + cursor.x + 'px,' + cursor.y + 'px)'}"
-  viewBox="0 0 24 36"
-  width="24"
+  viewBox="0 0 12 16"
+  width="16"
   xmlns="http://www.w3.org/2000/svg"
->
-  <path
-    d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z"
-    [ngStyle]="{'fill': cursor.color}"
-  />
-</svg>
+  >
+    <path
+      d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z"
+      [ngStyle]="{'fill': cursor.color}"
+    />
+  </svg>
+  <div class="cursor-name" [ngStyle]="{'background-color': cursor.color}" >{{ cursor.userName }}</div>
+</div>

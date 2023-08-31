@@ -11,6 +11,7 @@ export const schema = {
 
 export interface ICursor {
   userId: string
+  userName: string
   color: string
   x: number
   y: number

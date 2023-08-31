@@ -1,11 +1,11 @@
-import { AfterViewInit, Component, OnDestroy, ViewChild, ViewEncapsulation } from '@angular/core'
+import { AfterViewInit, Component, ViewChild, ViewEncapsulation } from '@angular/core'
 import { AzureClient, AzureContainerServices, AzureMember } from '@fluidframework/azure-client'
 import { ICursor, schema } from '../interfaces/fluid'
 import { IFluidContainer, IServiceAudience, SharedMap } from 'fluid-framework'
 import { AzureFluidRelayService } from '../services/azure-fluid-relay.service'
 import { Editor } from 'primeng/editor'
 import { TinyliciousClient } from '@fluidframework/tinylicious-client'
-import { v4 as uuidv4 } from 'uuid'
+// import { v4 as uuidv4 } from 'uuid'
 
 @Component({
   selector: 'app-collaborative-text-area',
@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid'
   encapsulation: ViewEncapsulation.None,
 })
 
-export class CollaborativeTextAreaComponent implements AfterViewInit, OnDestroy {
+export class CollaborativeTextAreaComponent implements AfterViewInit {
   @ViewChild('editor') editorEl!: Editor
 
   editor!: any
@@ -25,10 +25,12 @@ export class CollaborativeTextAreaComponent implements AfterViewInit, OnDestroy 
   // cursor: any = ''
   cursors: ICursor[] = []
   userId?: string
-  uuidv4: string = uuidv4()
+  // uuidv4: string = uuidv4()
 
-  color!: string
+  color: number = 0
   colors: string[] = []
+  name: number = 0
+  names: string[] = []
 
   client!: AzureClient
   fluidContainer!: { container: IFluidContainer; services: AzureContainerServices }
@@ -59,12 +61,33 @@ export class CollaborativeTextAreaComponent implements AfterViewInit, OnDestroy 
       '#d1027b',
       '#7986cb',
     ]
+    this.color = Math.floor(Math.random() * (this.colors.length - 1))
+    this.names = [
+      'Gaiana Fastu',
+      'John Doe',
+      'Elena Livian',
+      'Jasper Teo',
+      'Isabela',
+      'Alice',
+      'Bran Adalberto',
+      'Thomas',
+      'Erminhilt',
+      'Lutgardis',
+      'Gennadius',
+      'Wulfgang',
+      'Vitus Albus',
+      'Gabino',
+      'Dismas',
+      'Cronus',
+      'Helen',
+    ]
+    this.name = Math.floor(Math.random() * (this.names.length - 1))
   }
 
   async ngAfterViewInit(): Promise<void> {
     this.client = this.azureClient.getClient()
     // this.fluidContainer = await this.client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
-    this.fluidContainer = await this.client.getContainer('a77e4af0-8f4f-472b-8cde-c64b09975999', this.schema)
+    this.fluidContainer = await this.client.getContainer('cba9543a-89eb-42a7-b2c3-cc90ba1c7c00', this.schema)
 
     // const client = new TinyliciousClient()
     // this.fluidContainer = await client.createContainer(this.schema); const id = await this.fluidContainer.container.attach(); console.log(id)
@@ -76,9 +99,11 @@ export class CollaborativeTextAreaComponent implements AfterViewInit, OnDestroy 
 
     this.sharedCursors = this.fluidContainer.container.initialObjects.cursors as SharedMap
     this.sharedCursorMap = await this.fluidContainer.container.create(SharedMap)
-    this.sharedCursors.set(this.uuidv4, this.sharedCursorMap.handle)
-    this.cursorHandle = this.sharedCursors.get(this.uuidv4)
-    this.sharedCursor = await this.cursorHandle.get()
+    // this.sharedCursors.set(this.uuidv4, this.sharedCursorMap.handle)
+    // this.cursorHandle = this.sharedCursors.get(this.uuidv4)
+    // this.sharedCursor = await this.cursorHandle.get()
+    // this.sharedCursors.clear()
+    // console.log(this.sharedCursors.keys())
 
     // Editor initialization
     this.editor = this.editorEl.quill
@@ -92,9 +117,9 @@ export class CollaborativeTextAreaComponent implements AfterViewInit, OnDestroy 
   syncData(): void {
 
     this.sharedDelta.on('valueChanged', () => {
-      // console.log('sharedDescriptionChanged')
+      // console.log('sharedDeltaChanged')
 
-      if (this.uuidv4 !== this.sharedDelta.get('delta').userId){
+      if (this.userId !== this.sharedDelta.get('delta').userId){
         this.editor.updateContents(this.sharedDelta.get('delta').delta)
       }
 
@@ -103,12 +128,12 @@ export class CollaborativeTextAreaComponent implements AfterViewInit, OnDestroy 
     })
 
     this.sharedCursors.on('valueChanged', () => {
-      console.log('sharedCursorChanged')
+      // console.log('sharedCursorsChanged')
 
       this.sharedCursors.forEach(async (value: any, key: any) => {
         const cursorHandle = this.sharedCursors.get(key)
         const sharedCursor = await cursorHandle.get()
-        if (key !== this.uuidv4){
+        if (key !== this.userId){
           sharedCursor.on('valueChanged', () => {
             const cursorIndex = this.cursors.findIndex((cursor: any) => {
               return cursor.userId === sharedCursor.get('cursor').userId
@@ -123,23 +148,36 @@ export class CollaborativeTextAreaComponent implements AfterViewInit, OnDestroy 
       })
     })
 
-    this.audience.on('membersChanged', () => {
-      // this.userId = this.audience.getMyself()?.userId
+    this.audience.on('membersChanged', async () => {
+      // console.log('membersChanged')
 
-      // if (this.userId){
-      //   console.log(this.userId)
-      // }
-      // console.log(this.audience.getMembers())
+      this.userId = this.audience.getMyself()?.userId
+      if (this.userId){
+        this.sharedCursors.set(this.userId, this.sharedCursorMap.handle)
+        this.cursorHandle = this.sharedCursors.get(this.userId)
+        this.sharedCursor = await this.cursorHandle.get()
+      }
 
+      // console.log(this.sharedCursors.keys())
+
+    })
+
+    this.audience.on('memberRemoved', (event: any, object: any) => {
+      // console.log('memberRemoved')
+
+      this.sharedCursors.delete(object.userId)
+      this.cursors = this.cursors.filter(cursor => {
+        return cursor.userId !== object.userId
+      })
     })
 
   }
 
   onTextChange(event: any): void {
-    console.log('onTextChange')
+    // console.log('onTextChange')
 
     this.sharedDelta.set('delta', {
-      userId: this.uuidv4,
+      userId: this.userId,
       delta: event.delta
     })
 
@@ -149,8 +187,9 @@ export class CollaborativeTextAreaComponent implements AfterViewInit, OnDestroy 
     if (!this.sharedCursor){ return }
 
     this.sharedCursor.set('cursor', {
-      userId: this.uuidv4,
-      color: this.colors[1],
+      userId: this.userId,
+      userName: this.names[this.name],
+      color: this.colors[this.color],
       x: Math.round(event.pageX),
       y: Math.round(event.pageY)
     })
@@ -164,7 +203,4 @@ export class CollaborativeTextAreaComponent implements AfterViewInit, OnDestroy 
     this.editor.history.redo()
   }
 
-  ngOnDestroy(): void {
-    this.sharedCursors.delete(this.uuidv4)
-  }
 }
