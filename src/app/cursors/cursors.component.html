@@ -5,13 +5,12 @@
   width="24"
   height="36"
   [ngStyle]="{'transform': 'translate(' + cursor.x + 'px,' + cursor.y + 'px)'}"
-  style="transition: transform linear 0.06s"
   viewBox="0 0 24 36"
   width="24"
   xmlns="http://www.w3.org/2000/svg"
 >
   <path
     d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z"
-    [ngStyle]="{'fill': this.color}"
+    [ngStyle]="{'fill': cursor.color}"
   />
 </svg>

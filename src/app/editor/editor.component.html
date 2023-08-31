@@ -1,5 +1,5 @@
-<div style="position: relative; height: 65vh;">
-  <div #cursorsContainer id="cursors-container" (mousemove)="handleMouseMove($event)">
+<div style="position: relative; height: 65vh">
+  <div #cursorsContainer id="cursors-container" (mousemove)="onMouseMove($event)">
     <p-editor 
     #editor 
     [style]="{ height: '360px' }" 
@@ -60,16 +60,18 @@
           <button title="Superíndice" class="ql-script" value="super" aria-label="script"></button>
         </span>
         <span class="ql-formats">
-          <button title="Deshacer" (click)="onClickUndo()"><i class="pi pi-replay" style="font-size: .85rem"></i></button>
-          <button title="Rehacer" (click)="onClickRedo()"><i class="pi pi-refresh" style="font-size: .85rem"></i></button>
+          <button class="quill-undo" title="Deshacer" (click)="onClickUndo()"><i class="pi pi-replay"></i></button>
+          <button class="quill-redo" title="Rehacer" (click)="onClickRedo()"><i class="pi pi-refresh"></i></button>
         </span>
       </p-header>
     </ng-template>
     </p-editor>
-    <div *ngIf="this.cursor">
-      <app-cursors
-      [cursor]="cursor"
-      ></app-cursors>
+    <div *ngIf="cursors">
+      <div *ngFor="let cursor of cursors">
+        <app-cursors
+        [cursor]="cursor"
+        ></app-cursors>
+      </div>
     </div>
   </div>
 </div>

@@ -1,16 +1,17 @@
-import { SharedMap, SharedString } from 'fluid-framework'
+import { SharedMap } from 'fluid-framework'
 
 export const schema = {
   initialObjects: {
-    cursor: SharedMap,
+    cursors: SharedMap,
+    delta: SharedMap,
     description: SharedMap,
   },
-  dynamicObjectTypes: [
-  ]
+  dynamicObjectTypes: [SharedMap]
 }
 
 export interface ICursor {
   userId: string
+  color: string
   x: number
   y: number
 }
